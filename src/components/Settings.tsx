@@ -8,9 +8,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from './ui/Dialog';
-import type { AppData, WeightData } from '../types';
+import type { AppData, WeightData, FoodData } from '../types';
 import { exportData, importData } from '../utils/storage';
 import { exportWeightData, importWeightData } from '../utils/weightStorage';
+import { exportFoodData, importFoodData } from '../utils/foodStorage';
 
 interface SettingsProps {
   data: AppData;
@@ -22,15 +23,22 @@ interface SettingsProps {
   onWeightToggle: (enabled: boolean) => void;
   onWeightImport: (data: WeightData) => void;
   onWeightClear: () => void;
+  foodData: FoodData | null;
+  onFoodToggle: (enabled: boolean) => void;
+  onFoodImport: (data: FoodData) => void;
+  onFoodClear: () => void;
 }
 
-export const Settings = ({ data, onImport, onClearAll, theme, onToggleTheme, weightData, onWeightToggle, onWeightImport, onWeightClear }: SettingsProps) => {
+export const Settings = ({ data, onImport, onClearAll, theme, onToggleTheme, weightData, onWeightToggle, onWeightImport, onWeightClear, foodData, onFoodToggle, onFoodImport, onFoodClear }: SettingsProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const weightFileInputRef = useRef<HTMLInputElement>(null);
+  const foodFileInputRef = useRef<HTMLInputElement>(null);
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [showWeightClearDialog, setShowWeightClearDialog] = useState(false);
+  const [showFoodClearDialog, setShowFoodClearDialog] = useState(false);
   const [showImportError, setShowImportError] = useState(false);
   const [showWeightImportError, setShowWeightImportError] = useState(false);
+  const [showFoodImportError, setShowFoodImportError] = useState(false);
 
   const handleExport = () => {
     exportData(data);
@@ -121,6 +129,42 @@ export const Settings = ({ data, onImport, onClearAll, theme, onToggleTheme, wei
   const confirmWeightClear = () => {
     onWeightClear();
     setShowWeightClearDialog(false);
+  };
+
+  // Food tracking handlers
+  const handleFoodExport = () => {
+    if (foodData) {
+      exportFoodData(foodData);
+    }
+  };
+
+  const handleFoodImportClick = () => {
+    foodFileInputRef.current?.click();
+  };
+
+  const handleFoodFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const importedData = await importFoodData(file);
+        onFoodImport(importedData);
+      } catch {
+        setShowFoodImportError(true);
+      }
+    }
+    // Reset input
+    if (foodFileInputRef.current) {
+      foodFileInputRef.current.value = '';
+    }
+  };
+
+  const handleFoodClear = () => {
+    setShowFoodClearDialog(true);
+  };
+
+  const confirmFoodClear = () => {
+    onFoodClear();
+    setShowFoodClearDialog(false);
   };
 
   return (
@@ -222,6 +266,46 @@ export const Settings = ({ data, onImport, onClearAll, theme, onToggleTheme, wei
                   type="file"
                   accept="application/json"
                   onChange={handleWeightFileChange}
+                  className="hidden"
+                />
+              </div>
+            )}
+
+            <div className="flex items-center justify-between p-3 bg-secondary rounded-md">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🍽️</span>
+                <span className="text-sm font-medium">Food Tracking</span>
+              </div>
+              <button
+                onClick={() => onFoodToggle(!foodData?.enabled)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  foodData?.enabled ? 'bg-primary' : 'bg-muted'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    foodData?.enabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {foodData?.enabled && (
+              <div className="ml-8 space-y-2">
+                <Button onClick={handleFoodExport} variant="ghost" size="sm" className="w-full justify-start text-xs">
+                  Export Food Data
+                </Button>
+                <Button onClick={handleFoodImportClick} variant="ghost" size="sm" className="w-full justify-start text-xs">
+                  Import Food Data
+                </Button>
+                <Button onClick={handleFoodClear} variant="ghost" size="sm" className="w-full justify-start text-xs text-destructive">
+                  Clear Food Data
+                </Button>
+                <input
+                  ref={foodFileInputRef}
+                  type="file"
+                  accept="application/json"
+                  onChange={handleFoodFileChange}
                   className="hidden"
                 />
               </div>
@@ -407,6 +491,39 @@ export const Settings = ({ data, onImport, onClearAll, theme, onToggleTheme, wei
           </DialogHeader>
           <DialogFooter>
             <Button onClick={() => setShowWeightImportError(false)}>OK</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showFoodClearDialog} onOpenChange={setShowFoodClearDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Clear Food Data?</DialogTitle>
+            <DialogDescription>
+              This will delete all your food items and entries. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowFoodClearDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmFoodClear}>
+              Clear Food Data
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showFoodImportError} onOpenChange={setShowFoodImportError}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import Failed</DialogTitle>
+            <DialogDescription>
+              Failed to import food data. Please check that the file is a valid JSON export.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setShowFoodImportError(false)}>OK</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

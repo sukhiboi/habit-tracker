@@ -29,3 +29,30 @@ export interface WeightData {
   startDate: string; // ISO date string
   entries: WeightEntry[];
 }
+
+export type FoodUnit = 'g' | 'kg' | 'ml' | 'L' | 'pcs' | 'serving';
+
+export interface FoodItem {
+  id: string;
+  name: string;
+  defaultAmount: number;
+  unit: FoodUnit;
+  servingDescription?: string; // For 'serving' unit: "bowl", "plate", "cup"
+  healthScore: number; // 0-100 (0 = unhealthy, 100 = healthy)
+  lastUsedAt?: string; // ISO date string
+  useCount: number; // For favorites
+}
+
+export interface FoodEntry {
+  id: string;
+  foodItemId: string;
+  amount: number;
+  timestamp: string; // ISO date string with time
+  notes?: string;
+}
+
+export interface FoodData {
+  enabled: boolean;
+  foodItems: FoodItem[];
+  entries: FoodEntry[];
+}

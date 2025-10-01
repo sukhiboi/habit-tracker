@@ -7,17 +7,20 @@ import { Settings } from './components/Settings';
 import { Navigation } from './components/Navigation';
 import { WeightSetup } from './components/WeightSetup';
 import { WeightTracker } from './components/WeightTracker';
+import { FoodTracker } from './components/FoodTracker';
 import { loadData, saveData, clearData } from './utils/storage';
 import { loadWeightData, saveWeightData, clearWeightData } from './utils/weightStorage';
+import { loadFoodData, saveFoodData, clearFoodData } from './utils/foodStorage';
 import { createHabit, toggleHabitCompletion } from './utils/habits';
 import { useTheme } from './hooks/useTheme';
-import type { AppData, WeightData } from './types';
+import type { AppData, WeightData, FoodData } from './types';
 
-type View = 'habits' | 'calendar' | 'weight' | 'settings';
+type View = 'habits' | 'calendar' | 'weight' | 'food' | 'settings';
 
 export const App = () => {
   const [data, setData] = useState<AppData | null>(null);
   const [weightData, setWeightData] = useState<WeightData | null>(null);
+  const [foodData, setFoodData] = useState<FoodData | null>(null);
   const [currentView, setCurrentView] = useState<View>('habits');
   const [isLoading, setIsLoading] = useState(true);
   const { theme, toggleTheme } = useTheme();
@@ -26,8 +29,10 @@ export const App = () => {
   useEffect(() => {
     const savedData = loadData();
     const savedWeightData = loadWeightData();
+    const savedFoodData = loadFoodData();
     setData(savedData);
     setWeightData(savedWeightData);
+    setFoodData(savedFoodData);
     setIsLoading(false);
   }, []);
 
@@ -44,6 +49,13 @@ export const App = () => {
       saveWeightData(weightData);
     }
   }, [weightData]);
+
+  // Save food data whenever it changes
+  useEffect(() => {
+    if (foodData) {
+      saveFoodData(foodData);
+    }
+  }, [foodData]);
 
   const handleSetupComplete = (newData: AppData) => {
     setData(newData);
@@ -119,6 +131,37 @@ export const App = () => {
     setWeightData(null);
   };
 
+  // Food tracking handlers
+  const handleFoodUpdate = (updatedFoodData: FoodData) => {
+    setFoodData(updatedFoodData);
+  };
+
+  const handleFoodToggle = (enabled: boolean) => {
+    if (enabled) {
+      // Enable food tracking
+      setFoodData({
+        enabled: true,
+        foodItems: [],
+        entries: [],
+      });
+      setCurrentView('food');
+    } else {
+      // Disable food tracking
+      if (foodData) {
+        setFoodData({ ...foodData, enabled: false });
+      }
+    }
+  };
+
+  const handleFoodImport = (importedFoodData: FoodData) => {
+    setFoodData(importedFoodData);
+  };
+
+  const handleFoodClear = () => {
+    clearFoodData();
+    setFoodData(null);
+  };
+
   // Check if device is mobile (only once on mount)
   const [isMobileDevice, setIsMobileDevice] = useState(true);
 
@@ -184,6 +227,9 @@ export const App = () => {
             )}
           </>
         )}
+        {currentView === 'food' && foodData && foodData.enabled && (
+          <FoodTracker data={foodData} onUpdate={handleFoodUpdate} />
+        )}
         {currentView === 'settings' && (
           <Settings
             data={data}
@@ -195,6 +241,10 @@ export const App = () => {
             onWeightToggle={handleWeightToggle}
             onWeightImport={handleWeightImport}
             onWeightClear={handleWeightClear}
+            foodData={foodData}
+            onFoodToggle={handleFoodToggle}
+            onFoodImport={handleFoodImport}
+            onFoodClear={handleFoodClear}
           />
         )}
       </div>
@@ -203,6 +253,7 @@ export const App = () => {
         currentView={currentView}
         onViewChange={setCurrentView}
         weightEnabled={weightData?.enabled ?? false}
+        foodEnabled={foodData?.enabled ?? false}
       />
     </div>
   );
