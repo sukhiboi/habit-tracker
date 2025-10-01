@@ -2,7 +2,7 @@ import type { Habit } from '../types';
 import { getToday } from './date';
 
 // Fallback UUID generator for browsers that don't support crypto.randomUUID
-const generateUUID = (): string => {
+export const generateUUID = (): string => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
   }

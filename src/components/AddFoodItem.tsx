@@ -17,12 +17,15 @@ export const AddFoodItem = ({ onAdd, onCancel }: AddFoodItemProps) => {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted', { name, defaultAmount, unit, servingDescription, isHealthy });
 
     const amount = parseFloat(defaultAmount);
     if (!name.trim() || isNaN(amount) || amount <= 0) {
+      console.log('Validation failed:', { name: name.trim(), amount, isNaN: isNaN(amount) });
       return;
     }
 
+    console.log('Calling onAdd with data');
     onAdd({
       name: name.trim(),
       defaultAmount: amount,
@@ -30,6 +33,7 @@ export const AddFoodItem = ({ onAdd, onCancel }: AddFoodItemProps) => {
       servingDescription: unit === 'serving' ? servingDescription.trim() : undefined,
       healthScore: isHealthy ? 100 : 0,
     });
+    console.log('onAdd called successfully');
   };
 
   const unitOptions: Array<{ value: FoodUnit; label: string }> = [

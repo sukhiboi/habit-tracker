@@ -3,24 +3,13 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { AddFoodItem } from './AddFoodItem';
 import { cn } from '../lib/utils';
+import { generateUUID } from '../utils/habits';
 import type { FoodData, FoodItem, FoodEntry } from '../types';
 
 interface FoodTrackerProps {
   data: FoodData;
   onUpdate: (data: FoodData) => void;
 }
-
-// UUID generator
-const generateUUID = (): string => {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-};
 
 export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -133,18 +122,25 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
   };
 
   const handleAddNewItem = (itemData: Omit<FoodItem, 'id' | 'lastUsedAt' | 'useCount'>) => {
-    const newItem: FoodItem = {
-      ...itemData,
-      id: generateUUID(),
-      useCount: 0,
-    };
+    try {
+      console.log('Adding new food item:', itemData);
+      const newItem: FoodItem = {
+        ...itemData,
+        id: generateUUID(),
+        useCount: 0,
+      };
+      console.log('Generated food item with ID:', newItem.id);
 
-    onUpdate({
-      ...data,
-      foodItems: [...data.foodItems, newItem],
-    });
+      onUpdate({
+        ...data,
+        foodItems: [...data.foodItems, newItem],
+      });
 
-    setShowAddItem(false);
+      setShowAddItem(false);
+    } catch (error) {
+      console.error('Error adding food item:', error);
+      alert('Failed to add food item. Please check console for details.');
+    }
   };
 
   const handleDeleteEntry = (entryId: string) => {
