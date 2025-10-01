@@ -102,6 +102,11 @@ export const Calendar = ({ habits }: CalendarProps) => {
             setDebugInfo(info);
           };
 
+          // Calculate circle circumference (2 * π * r), with r=40 in viewBox 100x100
+          const radius = 40;
+          const circumference = 2 * Math.PI * radius;
+          const dashOffset = circumference - (progress / 100) * circumference;
+
           return (
             <div
               key={dateKey}
@@ -112,23 +117,24 @@ export const Calendar = ({ habits }: CalendarProps) => {
               )}
             >
               {/* Progress circle */}
-              <svg className="absolute inset-0 w-full h-full -rotate-90">
+              <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
                 <circle
-                  cx="50%"
-                  cy="50%"
-                  r="40%"
+                  cx="50"
+                  cy="50"
+                  r={radius}
                   fill="none"
                   stroke="hsl(var(--border))"
-                  strokeWidth="2"
+                  strokeWidth="4"
                 />
                 <circle
-                  cx="50%"
-                  cy="50%"
-                  r="40%"
+                  cx="50"
+                  cy="50"
+                  r={radius}
                   fill="none"
                   stroke="hsl(var(--primary))"
-                  strokeWidth="2"
-                  strokeDasharray={`${progress * 2.51} 251`}
+                  strokeWidth="4"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={dashOffset}
                   className="transition-all duration-300"
                 />
               </svg>
