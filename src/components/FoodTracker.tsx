@@ -14,6 +14,7 @@ interface FoodTrackerProps {
 export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddItem, setShowAddItem] = useState(false);
+  const [showBrowseModal, setShowBrowseModal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<string | null>(null);
   const [editAmount, setEditAmount] = useState('');
 
@@ -39,15 +40,15 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
     return foodItemIds
       .map(id => data.foodItems.find(item => item.id === id))
       .filter((item): item is FoodItem => item !== undefined)
-      .slice(0, 3);
+      .slice(0, 2);
   }, [data.entries, data.foodItems, currentHour]);
 
-  // Favorites (top 5 by use count)
+  // Favorites (top 2 healthy items by use count)
   const favorites = useMemo(() => {
     return [...data.foodItems]
-      .filter(item => item.useCount > 0)
+      .filter(item => item.useCount > 0 && item.healthScore >= 50)
       .sort((a, b) => b.useCount - a.useCount)
-      .slice(0, 5);
+      .slice(0, 2);
   }, [data.foodItems]);
 
   // Filtered food items
@@ -315,8 +316,12 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
           <h3 className="text-sm font-medium flex items-center gap-2">
             🕐 Based on this time yesterday
           </h3>
-          <div className="space-y-2">
-            {timeSuggestions.map(item => renderFoodItem(item))}
+          <div className="flex gap-2 overflow-x-auto">
+            {timeSuggestions.map(item => (
+              <div key={item.id} className="flex-1 min-w-[45%]">
+                {renderFoodItem(item)}
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -327,39 +332,45 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
           <h3 className="text-sm font-medium flex items-center gap-2">
             ⭐ Favorites
           </h3>
-          <div className="space-y-2">
-            {favorites.map(item => renderFoodItem(item))}
+          <div className="flex gap-2 overflow-x-auto">
+            {favorites.map(item => (
+              <div key={item.id} className="flex-1 min-w-[45%]">
+                {renderFoodItem(item)}
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Search and All Items */}
+      {/* Quick Add Items */}
       <div className="space-y-2">
-        <Input
-          type="text"
-          placeholder="Search food items..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium">📋 All Food Items</h3>
-            <Button size="sm" variant="outline" onClick={() => setShowAddItem(true)}>
-              + Add New
-            </Button>
-          </div>
-
-          {filteredItems.length === 0 ? (
-            <div className="text-center text-muted-foreground py-4">
-              {searchQuery ? 'No items found' : 'No food items yet. Add your first item!'}
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {filteredItems.map(item => renderFoodItem(item))}
-            </div>
-          )}
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium">📋 Quick Add</h3>
+          <Button size="sm" variant="outline" onClick={() => setShowAddItem(true)}>
+            + Add New
+          </Button>
         </div>
+
+        {data.foodItems.length === 0 ? (
+          <div className="text-center text-muted-foreground py-4">
+            No food items yet. Add your first item!
+          </div>
+        ) : (
+          <>
+            <div className="space-y-2">
+              {data.foodItems.slice(0, 5).map(item => renderFoodItem(item))}
+            </div>
+            {data.foodItems.length > 5 && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowBrowseModal(true)}
+              >
+                Browse All Items ({data.foodItems.length})
+              </Button>
+            )}
+          </>
+        )}
       </div>
 
       {/* Today's Log */}
@@ -409,6 +420,44 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
           onAdd={handleAddNewItem}
           onCancel={() => setShowAddItem(false)}
         />
+      )}
+
+      {/* Browse All Items Modal */}
+      {showBrowseModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-background border border-border rounded-lg p-6 w-full max-w-md max-h-[80vh] flex flex-col space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Browse All Items</h2>
+              <button
+                onClick={() => {
+                  setShowBrowseModal(false);
+                  setSearchQuery('');
+                }}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                ✕
+              </button>
+            </div>
+
+            <Input
+              type="text"
+              placeholder="Search food items..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoFocus
+            />
+
+            <div className="flex-1 overflow-y-auto space-y-2">
+              {filteredItems.length === 0 ? (
+                <div className="text-center text-muted-foreground py-4">
+                  No items found
+                </div>
+              ) : (
+                filteredItems.map(item => renderFoodItem(item))
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
