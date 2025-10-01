@@ -2,7 +2,6 @@ import { useState, useRef, TouchEvent } from 'react';
 import { cn } from '../lib/utils';
 import type { Habit } from '../types';
 import { isHabitCompletedToday } from '../utils/habits';
-import { getHabitColor } from '../utils/colors';
 
 interface HabitCardProps {
   habit: Habit;
@@ -16,7 +15,6 @@ export const HabitCard = ({ habit, isFirst, onToggle, onDelete }: HabitCardProps
   const [isSwiping, setIsSwiping] = useState(false);
   const startXRef = useRef(0);
   const isCompleted = isHabitCompletedToday(habit);
-  const colorClasses = getHabitColor(habit.id);
 
   const handleTouchStart = (e: TouchEvent) => {
     startXRef.current = e.touches[0].clientX;
@@ -63,8 +61,7 @@ export const HabitCard = ({ habit, isFirst, onToggle, onDelete }: HabitCardProps
       {/* Main card content */}
       <div
         className={cn(
-          'absolute inset-0 flex items-center justify-between px-6 transition-transform',
-          colorClasses,
+          'absolute inset-0 flex items-center justify-between px-6 transition-transform bg-card',
           isCompleted && 'opacity-60'
         )}
         style={{ transform: `translateX(${swipeX}px)` }}
