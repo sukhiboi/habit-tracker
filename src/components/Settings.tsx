@@ -8,8 +8,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from './ui/Dialog';
-import type { AppData } from '../types';
+import type { AppData, WeightData } from '../types';
 import { exportData, importData } from '../utils/storage';
+import { exportWeightData, importWeightData } from '../utils/weightStorage';
 
 interface SettingsProps {
   data: AppData;
@@ -17,12 +18,19 @@ interface SettingsProps {
   onClearAll: () => void;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
+  weightData: WeightData | null;
+  onWeightToggle: (enabled: boolean) => void;
+  onWeightImport: (data: WeightData) => void;
+  onWeightClear: () => void;
 }
 
-export const Settings = ({ data, onImport, onClearAll, theme, onToggleTheme }: SettingsProps) => {
+export const Settings = ({ data, onImport, onClearAll, theme, onToggleTheme, weightData, onWeightToggle, onWeightImport, onWeightClear }: SettingsProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const weightFileInputRef = useRef<HTMLInputElement>(null);
   const [showClearDialog, setShowClearDialog] = useState(false);
+  const [showWeightClearDialog, setShowWeightClearDialog] = useState(false);
   const [showImportError, setShowImportError] = useState(false);
+  const [showWeightImportError, setShowWeightImportError] = useState(false);
 
   const handleExport = () => {
     exportData(data);
@@ -77,6 +85,42 @@ export const Settings = ({ data, onImport, onClearAll, theme, onToggleTheme }: S
     } catch (error) {
       console.error('Failed to refresh app:', error);
     }
+  };
+
+  // Weight tracking handlers
+  const handleWeightExport = () => {
+    if (weightData) {
+      exportWeightData(weightData);
+    }
+  };
+
+  const handleWeightImportClick = () => {
+    weightFileInputRef.current?.click();
+  };
+
+  const handleWeightFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const importedData = await importWeightData(file);
+        onWeightImport(importedData);
+      } catch {
+        setShowWeightImportError(true);
+      }
+    }
+    // Reset input
+    if (weightFileInputRef.current) {
+      weightFileInputRef.current.value = '';
+    }
+  };
+
+  const handleWeightClear = () => {
+    setShowWeightClearDialog(true);
+  };
+
+  const confirmWeightClear = () => {
+    onWeightClear();
+    setShowWeightClearDialog(false);
   };
 
   return (
@@ -137,6 +181,51 @@ export const Settings = ({ data, onImport, onClearAll, theme, onToggleTheme }: S
                 </>
               )}
             </Button>
+          </div>
+        </div>
+
+        <div className="border-t pt-4">
+          <h3 className="text-sm font-medium mb-2">Features</h3>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-3 bg-secondary rounded-md">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">⚖️</span>
+                <span className="text-sm font-medium">Weight Tracking</span>
+              </div>
+              <button
+                onClick={() => onWeightToggle(!weightData?.enabled)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  weightData?.enabled ? 'bg-primary' : 'bg-muted'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    weightData?.enabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {weightData?.enabled && (
+              <div className="ml-8 space-y-2">
+                <Button onClick={handleWeightExport} variant="ghost" size="sm" className="w-full justify-start text-xs">
+                  Export Weight Data
+                </Button>
+                <Button onClick={handleWeightImportClick} variant="ghost" size="sm" className="w-full justify-start text-xs">
+                  Import Weight Data
+                </Button>
+                <Button onClick={handleWeightClear} variant="ghost" size="sm" className="w-full justify-start text-xs text-destructive">
+                  Clear Weight Data
+                </Button>
+                <input
+                  ref={weightFileInputRef}
+                  type="file"
+                  accept="application/json"
+                  onChange={handleWeightFileChange}
+                  className="hidden"
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -285,6 +374,39 @@ export const Settings = ({ data, onImport, onClearAll, theme, onToggleTheme }: S
           </DialogHeader>
           <DialogFooter>
             <Button onClick={() => setShowImportError(false)}>OK</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showWeightClearDialog} onOpenChange={setShowWeightClearDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Clear Weight Data?</DialogTitle>
+            <DialogDescription>
+              This will delete all your weight tracking data and entries. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowWeightClearDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmWeightClear}>
+              Clear Weight Data
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showWeightImportError} onOpenChange={setShowWeightImportError}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import Failed</DialogTitle>
+            <DialogDescription>
+              Failed to import weight data. Please check that the file is a valid JSON export.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setShowWeightImportError(false)}>OK</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

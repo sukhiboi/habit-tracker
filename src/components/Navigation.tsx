@@ -1,15 +1,16 @@
 import { ReactElement } from 'react';
 import { cn } from '../lib/utils';
 
-type View = 'habits' | 'calendar' | 'settings';
+type View = 'habits' | 'calendar' | 'weight' | 'settings';
 
 interface NavigationProps {
   currentView: View;
   onViewChange: (view: View) => void;
+  weightEnabled?: boolean;
 }
 
-export const Navigation = ({ currentView, onViewChange }: NavigationProps) => {
-  const navItems: { view: View; label: string; icon: ReactElement }[] = [
+export const Navigation = ({ currentView, onViewChange, weightEnabled = false }: NavigationProps) => {
+  const allNavItems: { view: View; label: string; icon: ReactElement }[] = [
     {
       view: 'habits',
       label: 'Habits',
@@ -53,6 +54,26 @@ export const Navigation = ({ currentView, onViewChange }: NavigationProps) => {
       ),
     },
     {
+      view: 'weight',
+      label: 'Weight',
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+          <path d="M12 6v6l4 2" />
+        </svg>
+      ),
+    },
+    {
       view: 'settings',
       label: 'Settings',
       icon: (
@@ -73,6 +94,8 @@ export const Navigation = ({ currentView, onViewChange }: NavigationProps) => {
       ),
     },
   ];
+
+  const navItems = weightEnabled ? allNavItems : allNavItems.filter(item => item.view !== 'weight');
 
   return (
     <nav className="bg-background border-t border-border">

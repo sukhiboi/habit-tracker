@@ -5,15 +5,19 @@ import { HabitList } from './components/HabitList';
 import { Calendar } from './components/Calendar';
 import { Settings } from './components/Settings';
 import { Navigation } from './components/Navigation';
+import { WeightSetup } from './components/WeightSetup';
+import { WeightTracker } from './components/WeightTracker';
 import { loadData, saveData, clearData } from './utils/storage';
+import { loadWeightData, saveWeightData, clearWeightData } from './utils/weightStorage';
 import { createHabit, toggleHabitCompletion } from './utils/habits';
 import { useTheme } from './hooks/useTheme';
-import type { AppData } from './types';
+import type { AppData, WeightData } from './types';
 
-type View = 'habits' | 'calendar' | 'settings';
+type View = 'habits' | 'calendar' | 'weight' | 'settings';
 
 export const App = () => {
   const [data, setData] = useState<AppData | null>(null);
+  const [weightData, setWeightData] = useState<WeightData | null>(null);
   const [currentView, setCurrentView] = useState<View>('habits');
   const [isLoading, setIsLoading] = useState(true);
   const { theme, toggleTheme } = useTheme();
@@ -21,7 +25,9 @@ export const App = () => {
   // Load data on mount
   useEffect(() => {
     const savedData = loadData();
+    const savedWeightData = loadWeightData();
     setData(savedData);
+    setWeightData(savedWeightData);
     setIsLoading(false);
   }, []);
 
@@ -31,6 +37,13 @@ export const App = () => {
       saveData(data);
     }
   }, [data]);
+
+  // Save weight data whenever it changes
+  useEffect(() => {
+    if (weightData) {
+      saveWeightData(weightData);
+    }
+  }, [weightData]);
 
   const handleSetupComplete = (newData: AppData) => {
     setData(newData);
@@ -74,6 +87,36 @@ export const App = () => {
     clearData();
     setData(null);
     setCurrentView('habits');
+  };
+
+  // Weight tracking handlers
+  const handleWeightSetupComplete = (newWeightData: WeightData) => {
+    setWeightData(newWeightData);
+  };
+
+  const handleWeightUpdate = (updatedWeightData: WeightData) => {
+    setWeightData(updatedWeightData);
+  };
+
+  const handleWeightToggle = (enabled: boolean) => {
+    if (enabled) {
+      // Switching weight tracking on - show weight setup
+      setCurrentView('weight');
+    } else {
+      // Switching weight tracking off
+      if (weightData) {
+        setWeightData({ ...weightData, enabled: false });
+      }
+    }
+  };
+
+  const handleWeightImport = (importedWeightData: WeightData) => {
+    setWeightData(importedWeightData);
+  };
+
+  const handleWeightClear = () => {
+    clearWeightData();
+    setWeightData(null);
   };
 
   // Check if device is mobile (only once on mount)
@@ -132,6 +175,15 @@ export const App = () => {
           />
         )}
         {currentView === 'calendar' && <Calendar habits={data.habits} />}
+        {currentView === 'weight' && (
+          <>
+            {!weightData || !weightData.enabled ? (
+              <WeightSetup onComplete={handleWeightSetupComplete} />
+            ) : (
+              <WeightTracker data={weightData} onUpdate={handleWeightUpdate} />
+            )}
+          </>
+        )}
         {currentView === 'settings' && (
           <Settings
             data={data}
@@ -139,11 +191,19 @@ export const App = () => {
             onClearAll={handleClearAll}
             theme={theme}
             onToggleTheme={toggleTheme}
+            weightData={weightData}
+            onWeightToggle={handleWeightToggle}
+            onWeightImport={handleWeightImport}
+            onWeightClear={handleWeightClear}
           />
         )}
       </div>
 
-      <Navigation currentView={currentView} onViewChange={setCurrentView} />
+      <Navigation
+        currentView={currentView}
+        onViewChange={setCurrentView}
+        weightEnabled={weightData?.enabled ?? false}
+      />
     </div>
   );
 };
