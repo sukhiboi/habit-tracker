@@ -7,6 +7,7 @@ import { Settings } from './components/Settings';
 import { Navigation } from './components/Navigation';
 import { loadData, saveData, clearData } from './utils/storage';
 import { createHabit, toggleHabitCompletion } from './utils/habits';
+import { useTheme } from './hooks/useTheme';
 import type { AppData } from './types';
 
 type View = 'habits' | 'calendar' | 'settings';
@@ -15,6 +16,7 @@ export const App = () => {
   const [data, setData] = useState<AppData | null>(null);
   const [currentView, setCurrentView] = useState<View>('habits');
   const [isLoading, setIsLoading] = useState(true);
+  const { theme, toggleTheme } = useTheme();
 
   // Load data on mount
   useEffect(() => {
@@ -131,7 +133,13 @@ export const App = () => {
         )}
         {currentView === 'calendar' && <Calendar habits={data.habits} />}
         {currentView === 'settings' && (
-          <Settings data={data} onImport={handleImport} onClearAll={handleClearAll} />
+          <Settings
+            data={data}
+            onImport={handleImport}
+            onClearAll={handleClearAll}
+            theme={theme}
+            onToggleTheme={toggleTheme}
+          />
         )}
       </div>
 
