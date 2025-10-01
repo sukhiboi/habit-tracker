@@ -2,6 +2,7 @@ import { useState, useRef, TouchEvent } from 'react';
 import { cn } from '../lib/utils';
 import type { Habit } from '../types';
 import { isHabitCompletedToday } from '../utils/habits';
+import { getHabitColor } from '../utils/colors';
 
 interface HabitCardProps {
   habit: Habit;
@@ -15,6 +16,7 @@ export const HabitCard = ({ habit, isFirst, onToggle, onDelete }: HabitCardProps
   const [isSwiping, setIsSwiping] = useState(false);
   const startXRef = useRef(0);
   const isCompleted = isHabitCompletedToday(habit);
+  const colorClasses = getHabitColor(habit.id);
 
   const handleTouchStart = (e: TouchEvent) => {
     startXRef.current = e.touches[0].clientX;
@@ -25,12 +27,14 @@ export const HabitCard = ({ habit, isFirst, onToggle, onDelete }: HabitCardProps
     if (!isSwiping) return;
     const currentX = e.touches[0].clientX;
     const diff = currentX - startXRef.current;
-    setSwipeX(Math.max(-100, Math.min(100, diff)));
+    // Only allow swiping right (positive values)
+    setSwipeX(Math.max(0, Math.min(100, diff)));
   };
 
   const handleTouchEnd = () => {
     setIsSwiping(false);
-    if (Math.abs(swipeX) > 50) {
+    // Only trigger completion on swipe right
+    if (swipeX > 50) {
       onToggle(habit.id);
     }
     setSwipeX(0);
@@ -46,7 +50,7 @@ export const HabitCard = ({ habit, isFirst, onToggle, onDelete }: HabitCardProps
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Swipe indicator backgrounds */}
+      {/* Swipe indicator background */}
       <div
         className={cn(
           'absolute inset-0 flex items-center justify-start pl-6 text-white font-medium transition-opacity',
@@ -55,19 +59,12 @@ export const HabitCard = ({ habit, isFirst, onToggle, onDelete }: HabitCardProps
       >
         ✓ Complete
       </div>
-      <div
-        className={cn(
-          'absolute inset-0 flex items-center justify-end pr-6 text-white font-medium transition-opacity',
-          swipeX < 0 ? 'bg-red-500 opacity-100' : 'bg-red-500 opacity-0'
-        )}
-      >
-        ✗ Undo
-      </div>
 
       {/* Main card content */}
       <div
         className={cn(
-          'absolute inset-0 bg-card flex items-center justify-between px-6 transition-transform',
+          'absolute inset-0 flex items-center justify-between px-6 transition-transform',
+          colorClasses,
           isCompleted && 'opacity-60'
         )}
         style={{ transform: `translateX(${swipeX}px)` }}
@@ -84,7 +81,7 @@ export const HabitCard = ({ habit, isFirst, onToggle, onDelete }: HabitCardProps
           </h3>
           {isFirst && (
             <p className="text-sm text-muted-foreground mt-2">
-              Swipe right to complete, left to undo
+              Swipe right to complete
             </p>
           )}
         </div>

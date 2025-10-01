@@ -10,6 +10,7 @@ interface CalendarProps {
 
 export const Calendar = ({ habits }: CalendarProps) => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
@@ -27,7 +28,7 @@ export const Calendar = ({ habits }: CalendarProps) => {
   const monthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 overflow-y-auto h-full">
       {/* Calendar header */}
       <div className="flex items-center justify-between">
         <button
@@ -86,13 +87,27 @@ export const Calendar = ({ habits }: CalendarProps) => {
           const dateKey = getDayKey(date);
           const progress = getDateProgress(habits, dateKey);
           const isCurrentMonth = date.getMonth() === month;
-          const isToday = dateKey === new Date().toISOString().split('T')[0];
+          const today = new Date();
+          const todayKey = getDayKey(today);
+          const isToday = dateKey === todayKey;
+
+          const handleDateClick = () => {
+            const completedHabits = habits.filter(habit =>
+              habit.completions.some(d => d.startsWith(dateKey))
+            );
+            const info = `Date: ${dateKey}\nHabits: ${habits.length}\nCompleted: ${completedHabits.length}\nProgress: ${progress}%\n\nCompleted Habits:\n${completedHabits.map(h => `- ${h.name}`).join('\n')}\n\nAll completions for this date:\n${habits.map(h => {
+              const completion = h.completions.find(d => d.startsWith(dateKey));
+              return `${h.name}: ${completion || 'not completed'}`;
+            }).join('\n')}`;
+            setDebugInfo(info);
+          };
 
           return (
             <div
               key={dateKey}
+              onClick={handleDateClick}
               className={cn(
-                'aspect-square flex items-center justify-center relative',
+                'aspect-square flex items-center justify-center relative cursor-pointer hover:bg-accent/20',
                 !isCurrentMonth && 'opacity-30'
               )}
             >
@@ -131,6 +146,24 @@ export const Calendar = ({ habits }: CalendarProps) => {
           );
         })}
       </div>
+
+      {/* Debug info panel */}
+      {debugInfo && (
+        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex justify-between items-start mb-2">
+            <h4 className="font-bold text-yellow-900">🐛 Debug Info (Tap date to see details)</h4>
+            <button
+              onClick={() => setDebugInfo(null)}
+              className="text-yellow-700 hover:text-yellow-900"
+            >
+              ✕
+            </button>
+          </div>
+          <pre className="text-xs text-yellow-900 whitespace-pre-wrap font-mono">
+            {debugInfo}
+          </pre>
+        </div>
+      )}
     </div>
   );
 };
