@@ -324,12 +324,12 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
     const todayEntries = data.entries.filter(e => e.timestamp.startsWith(today));
 
     const healthy = todayEntries.filter(e => {
-      const item = getFoodItem(e.foodItemId);
+      const item = data.foodItems.find(item => item.id === e.foodItemId);
       return item && item.healthScore >= 50;
     }).length;
 
     const unhealthy = todayEntries.filter(e => {
-      const item = getFoodItem(e.foodItemId);
+      const item = data.foodItems.find(item => item.id === e.foodItemId);
       return item && item.healthScore < 50;
     }).length;
 

@@ -118,7 +118,7 @@ export const importAllData = (file: File): Promise<UnifiedAppData> => {
         };
 
         resolve(unifiedData);
-      } catch (error) {
+      } catch {
         reject(new Error('Invalid JSON file'));
       }
     };

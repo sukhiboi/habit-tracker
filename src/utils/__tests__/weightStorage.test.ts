@@ -107,8 +107,8 @@ describe('Weight Storage utilities', () => {
       };
 
       createElementSpy = jest.spyOn(document, 'createElement').mockReturnValue(mockLink as HTMLAnchorElement);
-      appendChildSpy = jest.spyOn(document.body, 'appendChild').mockImplementation(() => mockLink as any);
-      removeChildSpy = jest.spyOn(document.body, 'removeChild').mockImplementation(() => mockLink as any);
+      appendChildSpy = jest.spyOn(document.body, 'appendChild').mockImplementation(() => mockLink as Node);
+      removeChildSpy = jest.spyOn(document.body, 'removeChild').mockImplementation(() => mockLink as Node);
       global.URL.createObjectURL = jest.fn(() => 'blob:mock-url');
       global.URL.revokeObjectURL = jest.fn();
     });
