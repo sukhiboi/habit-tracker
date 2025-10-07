@@ -461,8 +461,8 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
 
       {/* Unified Search/Add Modal */}
       {showUnifiedModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50">
-          <div className="bg-background border border-border rounded-t-lg sm:rounded-lg p-6 w-full max-w-md max-h-[60vh] max-h-[60dvh] flex flex-col space-y-4">
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 overflow-hidden">
+          <div className="bg-background border border-border rounded-t-lg sm:rounded-lg p-6 w-full max-w-md max-h-full flex flex-col space-y-4">
             <div className="flex items-center justify-between shrink-0">
               <h2 className="text-xl font-semibold">Add Food</h2>
               <button
@@ -482,11 +482,6 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
                 placeholder="Search or add new food item..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={(e) => {
-                  setTimeout(() => {
-                    e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }, 300);
-                }}
                 autoFocus
               />
             </div>
