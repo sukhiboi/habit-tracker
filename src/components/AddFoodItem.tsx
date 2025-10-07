@@ -48,8 +48,8 @@ export const AddFoodItem = ({ onAdd, onCancel, initialName = '' }: AddFoodItemPr
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-hidden p-4">
-      <div ref={formRef} className="bg-background border border-border rounded-lg p-6 w-full max-w-md space-y-4 max-h-full overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 overflow-y-auto pt-4 pb-4">
+      <div ref={formRef} className="bg-background border border-border rounded-lg p-6 w-full max-w-md space-y-4 max-h-[70vh] max-h-[70dvh] overflow-y-auto my-auto">
         <div className="flex items-center justify-between sticky top-0 bg-background pb-2 -mt-2 pt-2">
           <h2 className="text-xl font-semibold">Add New Food Item</h2>
           <button

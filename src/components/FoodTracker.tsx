@@ -461,8 +461,8 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
 
       {/* Unified Search/Add Modal */}
       {showUnifiedModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-hidden p-4">
-          <div className="bg-background border border-border rounded-lg p-6 w-full max-w-md max-h-full flex flex-col space-y-4">
+        <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 overflow-y-auto pt-4 pb-4">
+          <div className="bg-background border border-border rounded-lg p-6 w-full max-w-md max-h-[70vh] max-h-[70dvh] my-auto flex flex-col space-y-4">
             <div className="flex items-center justify-between shrink-0">
               <h2 className="text-xl font-semibold">Add Food</h2>
               <button
