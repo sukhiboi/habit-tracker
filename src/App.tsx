@@ -13,7 +13,7 @@ import { loadWeightData, saveWeightData, clearWeightData } from './utils/weightS
 import { loadFoodData, saveFoodData, clearFoodData } from './utils/foodStorage';
 import { createHabit, toggleHabitCompletion } from './utils/habits';
 import { useTheme } from './hooks/useTheme';
-import type { AppData, WeightData, FoodData } from './types';
+import type { AppData, WeightData, FoodData, UnifiedAppData } from './types';
 
 type View = 'habits' | 'calendar' | 'weight' | 'food' | 'settings';
 
@@ -92,6 +92,23 @@ export const App = () => {
 
   const handleImport = (importedData: AppData) => {
     setData(importedData);
+    setCurrentView('habits');
+  };
+
+  const handleImportAll = (importedData: UnifiedAppData) => {
+    // Import habits data
+    setData(importedData.habits);
+
+    // Import weight data if present
+    if (importedData.weight) {
+      setWeightData(importedData.weight);
+    }
+
+    // Import food data if present
+    if (importedData.food) {
+      setFoodData(importedData.food);
+    }
+
     setCurrentView('habits');
   };
 
@@ -234,6 +251,7 @@ export const App = () => {
           <Settings
             data={data}
             onImport={handleImport}
+            onImportAll={handleImportAll}
             onClearAll={handleClearAll}
             theme={theme}
             onToggleTheme={toggleTheme}

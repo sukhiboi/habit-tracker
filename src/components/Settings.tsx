@@ -8,14 +8,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from './ui/Dialog';
-import type { AppData, WeightData, FoodData } from '../types';
-import { exportData, importData } from '../utils/storage';
+import type { AppData, WeightData, FoodData, UnifiedAppData } from '../types';
+import { exportAllData, importAllData } from '../utils/storage';
 import { exportWeightData, importWeightData } from '../utils/weightStorage';
 import { exportFoodData, importFoodData } from '../utils/foodStorage';
 
 interface SettingsProps {
   data: AppData;
   onImport: (data: AppData) => void;
+  onImportAll: (data: UnifiedAppData) => void;
   onClearAll: () => void;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
@@ -29,7 +30,7 @@ interface SettingsProps {
   onFoodClear: () => void;
 }
 
-export const Settings = ({ data, onImport, onClearAll, theme, onToggleTheme, weightData, onWeightToggle, onWeightImport, onWeightClear, foodData, onFoodToggle, onFoodImport, onFoodClear }: SettingsProps) => {
+export const Settings = ({ data, onImportAll, onClearAll, theme, onToggleTheme, weightData, onWeightToggle, onWeightImport, onWeightClear, foodData, onFoodToggle, onFoodImport, onFoodClear }: SettingsProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const weightFileInputRef = useRef<HTMLInputElement>(null);
   const foodFileInputRef = useRef<HTMLInputElement>(null);
@@ -40,10 +41,12 @@ export const Settings = ({ data, onImport, onClearAll, theme, onToggleTheme, wei
   const [showWeightImportError, setShowWeightImportError] = useState(false);
   const [showFoodImportError, setShowFoodImportError] = useState(false);
 
+  // High-level export: exports ALL data (habits, weight, food, toggles)
   const handleExport = () => {
-    exportData(data);
+    exportAllData(data, weightData, foodData);
   };
 
+  // High-level import: imports ALL data
   const handleImportClick = () => {
     fileInputRef.current?.click();
   };
@@ -52,8 +55,8 @@ export const Settings = ({ data, onImport, onClearAll, theme, onToggleTheme, wei
     const file = e.target.files?.[0];
     if (file) {
       try {
-        const importedData = await importData(file);
-        onImport(importedData);
+        const importedData = await importAllData(file);
+        onImportAll(importedData);
       } catch {
         setShowImportError(true);
       }

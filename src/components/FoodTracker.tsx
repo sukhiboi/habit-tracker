@@ -461,9 +461,9 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
 
       {/* Unified Search/Add Modal */}
       {showUnifiedModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-background border border-border rounded-lg p-6 w-full max-w-md max-h-[80vh] flex flex-col space-y-4">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50">
+          <div className="bg-background border border-border rounded-t-lg sm:rounded-lg p-6 w-full max-w-md max-h-[85vh] max-h-[85dvh] flex flex-col space-y-4">
+            <div className="flex items-center justify-between shrink-0">
               <h2 className="text-xl font-semibold">Add Food</h2>
               <button
                 onClick={() => {
@@ -476,15 +476,17 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
               </button>
             </div>
 
-            <Input
-              type="text"
-              placeholder="Search or add new food item..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              autoFocus
-            />
+            <div className="shrink-0">
+              <Input
+                type="text"
+                placeholder="Search or add new food item..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                autoFocus
+              />
+            </div>
 
-            <div className="flex-1 overflow-y-auto space-y-2">
+            <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
               {filteredItems.length === 0 ? (
                 <div className="space-y-4">
                   <div className="text-center text-muted-foreground py-4">

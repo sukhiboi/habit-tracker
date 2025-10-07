@@ -56,3 +56,11 @@ export interface FoodData {
   foodItems: FoodItem[];
   entries: FoodEntry[];
 }
+
+export interface UnifiedAppData {
+  version: string; // For future compatibility
+  habits: AppData;
+  weight: WeightData | null;
+  food: FoodData | null;
+  exportedAt: string; // ISO date string
+}
