@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useRef } from 'react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import type { FoodItem, FoodUnit } from '../types';
@@ -15,6 +15,14 @@ export const AddFoodItem = ({ onAdd, onCancel, initialName = '' }: AddFoodItemPr
   const [unit, setUnit] = useState<FoodUnit>('pcs');
   const [servingDescription, setServingDescription] = useState('');
   const [isHealthy, setIsHealthy] = useState(true);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Small delay to let keyboard animation start
+    setTimeout(() => {
+      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -48,7 +56,7 @@ export const AddFoodItem = ({ onAdd, onCancel, initialName = '' }: AddFoodItemPr
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50">
-      <div className="bg-background border border-border rounded-t-lg sm:rounded-lg p-6 w-full max-w-md space-y-4 max-h-[85vh] max-h-[85dvh] overflow-y-auto">
+      <div ref={formRef} className="bg-background border border-border rounded-t-lg sm:rounded-lg p-6 w-full max-w-md space-y-4 max-h-[60vh] max-h-[60dvh] overflow-y-auto">
         <div className="flex items-center justify-between sticky top-0 bg-background pb-2 -mt-2 pt-2">
           <h2 className="text-xl font-semibold">Add New Food Item</h2>
           <button
@@ -69,6 +77,7 @@ export const AddFoodItem = ({ onAdd, onCancel, initialName = '' }: AddFoodItemPr
               placeholder="e.g., Samosa, Chai, Apple"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              onFocus={handleInputFocus}
               autoFocus
             />
           </div>
@@ -85,6 +94,7 @@ export const AddFoodItem = ({ onAdd, onCancel, initialName = '' }: AddFoodItemPr
                 placeholder="1"
                 value={defaultAmount}
                 onChange={(e) => setDefaultAmount(e.target.value)}
+                onFocus={handleInputFocus}
               />
             </div>
 
@@ -117,6 +127,7 @@ export const AddFoodItem = ({ onAdd, onCancel, initialName = '' }: AddFoodItemPr
                 placeholder="e.g., bowl, plate, cup"
                 value={servingDescription}
                 onChange={(e) => setServingDescription(e.target.value)}
+                onFocus={handleInputFocus}
               />
             </div>
           )}
