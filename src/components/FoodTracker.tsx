@@ -14,9 +14,10 @@ interface FoodTrackerProps {
 export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddItem, setShowAddItem] = useState(false);
-  const [showBrowseModal, setShowBrowseModal] = useState(false);
+  const [showUnifiedModal, setShowUnifiedModal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<string | null>(null);
   const [editAmount, setEditAmount] = useState('');
+  const [prefilledName, setPrefilledName] = useState('');
 
   // Get current hour for time-based suggestions
   const currentHour = new Date().getHours();
@@ -62,9 +63,18 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
   // Today's entries grouped by time of day
   const todaysEntries = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
+    console.log('Today date:', today);
+    console.log('All entries:', data.entries);
+
     const entries = data.entries
-      .filter(entry => entry.timestamp.startsWith(today))
+      .filter(entry => {
+        const matches = entry.timestamp.startsWith(today);
+        console.log(`Entry ${entry.id} (${entry.timestamp}) matches today: ${matches}`);
+        return matches;
+      })
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+    console.log('Filtered today entries:', entries);
 
     const morning = entries.filter(e => {
       const hour = new Date(e.timestamp).getHours();
@@ -80,6 +90,8 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
       const hour = new Date(e.timestamp).getHours();
       return hour >= 17 || hour < 5;
     });
+
+    console.log('Entries by time:', { morning: morning.length, afternoon: afternoon.length, evening: evening.length });
 
     return { morning, afternoon, evening };
   }, [data.entries]);
@@ -108,6 +120,9 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
       timestamp: new Date().toISOString(),
     };
 
+    console.log('Adding food entry:', newEntry);
+    console.log('Current entries:', data.entries);
+
     // Update use count and last used
     const updatedItems = data.foodItems.map(item =>
       item.id === foodItem.id
@@ -115,11 +130,15 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
         : item
     );
 
-    onUpdate({
+    const updatedData = {
       ...data,
       foodItems: updatedItems,
       entries: [...data.entries, newEntry],
-    });
+    };
+
+    console.log('Updated entries:', updatedData.entries);
+
+    onUpdate(updatedData);
   };
 
   const handleAddNewItem = (itemData: Omit<FoodItem, 'id' | 'lastUsedAt' | 'useCount'>) => {
@@ -138,10 +157,24 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
       });
 
       setShowAddItem(false);
+      setShowUnifiedModal(true);
+      setSearchQuery('');
+      setPrefilledName('');
     } catch (error) {
       console.error('Error adding food item:', error);
       alert('Failed to add food item. Please check console for details.');
     }
+  };
+
+  const handleOpenAddItemForm = () => {
+    setPrefilledName(searchQuery);
+    setShowUnifiedModal(false);
+    setShowAddItem(true);
+  };
+
+  const handleCloseAddItemForm = () => {
+    setShowAddItem(false);
+    setPrefilledName('');
   };
 
   const handleDeleteEntry = (entryId: string) => {
@@ -286,29 +319,52 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
     );
   };
 
-  const healthyCount = todaysEntries.morning.length + todaysEntries.afternoon.length + todaysEntries.evening.length;
-  const unhealthyCount = data.entries.filter(e => {
+  const todayEntryStats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
-    if (!e.timestamp.startsWith(today)) return false;
-    const item = getFoodItem(e.foodItemId);
-    return item && item.healthScore < 50;
-  }).length;
+    const todayEntries = data.entries.filter(e => e.timestamp.startsWith(today));
+
+    const healthy = todayEntries.filter(e => {
+      const item = getFoodItem(e.foodItemId);
+      return item && item.healthScore >= 50;
+    }).length;
+
+    const unhealthy = todayEntries.filter(e => {
+      const item = getFoodItem(e.foodItemId);
+      return item && item.healthScore < 50;
+    }).length;
+
+    return { healthy, unhealthy, total: todayEntries.length };
+  }, [data.entries, data.foodItems]);
 
   return (
-    <div className="p-4 space-y-4 overflow-y-auto h-full">
-      {/* Stats */}
-      <div className="bg-card border border-border rounded-lg p-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{healthyCount - unhealthyCount}</div>
-            <div className="text-sm text-muted-foreground">Healthy</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{unhealthyCount}</div>
-            <div className="text-sm text-muted-foreground">Unhealthy</div>
-          </div>
+    <div className="p-4 space-y-4 overflow-y-auto h-full pb-24">
+      {data.foodItems.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
+          <div className="text-6xl">🍎</div>
+          <h2 className="text-xl font-semibold">Start Tracking Food</h2>
+          <p className="text-muted-foreground max-w-xs">
+            Click the + button below to add your first food item and start logging what you eat.
+          </p>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Stats */}
+          <div className="bg-card border border-border rounded-lg p-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{todayEntryStats.healthy}</div>
+                <div className="text-sm text-muted-foreground">Healthy</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{todayEntryStats.unhealthy}</div>
+                <div className="text-sm text-muted-foreground">Unhealthy</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-primary">{todayEntryStats.total}</div>
+                <div className="text-sm text-muted-foreground">Total</div>
+              </div>
+            </div>
+          </div>
 
       {/* Time-based suggestions */}
       {timeSuggestions.length > 0 && (
@@ -341,37 +397,6 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
           </div>
         </div>
       )}
-
-      {/* Quick Add Items */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium">📋 Quick Add</h3>
-          <Button size="sm" variant="outline" onClick={() => setShowAddItem(true)}>
-            + Add New
-          </Button>
-        </div>
-
-        {data.foodItems.length === 0 ? (
-          <div className="text-center text-muted-foreground py-4">
-            No food items yet. Add your first item!
-          </div>
-        ) : (
-          <>
-            <div className="space-y-2">
-              {data.foodItems.slice(0, 5).map(item => renderFoodItem(item))}
-            </div>
-            {data.foodItems.length > 5 && (
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setShowBrowseModal(true)}
-              >
-                Browse All Items ({data.foodItems.length})
-              </Button>
-            )}
-          </>
-        )}
-      </div>
 
       {/* Today's Log */}
       <div className="space-y-4 border-t pt-4">
@@ -413,24 +438,36 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
           )}
         </div>
       </div>
+        </>
+      )}
+
+      {/* Floating Action Button */}
+      <button
+        onClick={() => setShowUnifiedModal(true)}
+        className="fixed bottom-20 right-4 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center text-2xl hover:scale-110 transition-transform z-40"
+        aria-label="Add food"
+      >
+        +
+      </button>
 
       {/* Add Food Item Modal */}
       {showAddItem && (
         <AddFoodItem
           onAdd={handleAddNewItem}
-          onCancel={() => setShowAddItem(false)}
+          onCancel={handleCloseAddItemForm}
+          initialName={prefilledName}
         />
       )}
 
-      {/* Browse All Items Modal */}
-      {showBrowseModal && (
+      {/* Unified Search/Add Modal */}
+      {showUnifiedModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-background border border-border rounded-lg p-6 w-full max-w-md max-h-[80vh] flex flex-col space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Browse All Items</h2>
+              <h2 className="text-xl font-semibold">Add Food</h2>
               <button
                 onClick={() => {
-                  setShowBrowseModal(false);
+                  setShowUnifiedModal(false);
                   setSearchQuery('');
                 }}
                 className="text-muted-foreground hover:text-foreground"
@@ -441,7 +478,7 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
 
             <Input
               type="text"
-              placeholder="Search food items..."
+              placeholder="Search or add new food item..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               autoFocus
@@ -449,11 +486,33 @@ export const FoodTracker = ({ data, onUpdate }: FoodTrackerProps) => {
 
             <div className="flex-1 overflow-y-auto space-y-2">
               {filteredItems.length === 0 ? (
-                <div className="text-center text-muted-foreground py-4">
-                  No items found
+                <div className="space-y-4">
+                  <div className="text-center text-muted-foreground py-4">
+                    No items found
+                  </div>
+                  {searchQuery.trim() && (
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={handleOpenAddItemForm}
+                    >
+                      + Add new item: "{searchQuery}"
+                    </Button>
+                  )}
                 </div>
               ) : (
-                filteredItems.map(item => renderFoodItem(item))
+                <>
+                  {filteredItems.map(item => renderFoodItem(item))}
+                  {searchQuery.trim() && !filteredItems.some(item => item.name.toLowerCase() === searchQuery.toLowerCase()) && (
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={handleOpenAddItemForm}
+                    >
+                      + Add new item: "{searchQuery}"
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           </div>

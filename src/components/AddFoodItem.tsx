@@ -6,10 +6,11 @@ import type { FoodItem, FoodUnit } from '../types';
 interface AddFoodItemProps {
   onAdd: (item: Omit<FoodItem, 'id' | 'lastUsedAt' | 'useCount'>) => void;
   onCancel: () => void;
+  initialName?: string;
 }
 
-export const AddFoodItem = ({ onAdd, onCancel }: AddFoodItemProps) => {
-  const [name, setName] = useState('');
+export const AddFoodItem = ({ onAdd, onCancel, initialName = '' }: AddFoodItemProps) => {
+  const [name, setName] = useState(initialName);
   const [defaultAmount, setDefaultAmount] = useState('');
   const [unit, setUnit] = useState<FoodUnit>('pcs');
   const [servingDescription, setServingDescription] = useState('');
