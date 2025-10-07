@@ -128,8 +128,8 @@ export const Navigation = ({ currentView, onViewChange, weightEnabled = false, f
   }
 
   return (
-    <nav className="bg-background border-t border-border">
-      <div className="flex items-center justify-around h-16">
+    <nav className="bg-background border-t border-border shrink-0">
+      <div className="flex items-center justify-around h-16 pb-safe-nav">
         {navItems.map(({ view, label, icon }) => (
           <button
             key={view}

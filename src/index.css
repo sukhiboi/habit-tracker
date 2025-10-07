@@ -78,11 +78,15 @@ html, body, #root {
   body {
     padding-left: max(0px, env(safe-area-inset-left));
     padding-right: max(0px, env(safe-area-inset-right));
-    padding-bottom: max(0px, env(safe-area-inset-bottom));
   }
 }
 
-/* Utility class for safe area padding at bottom */
+/* Utility class for safe area padding at bottom - used in modals/forms */
 .pb-safe {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* Utility class for navigation safe area - accounts for home indicator */
+.pb-safe-nav {
+  padding-bottom: env(safe-area-inset-bottom);
 }
