@@ -168,7 +168,7 @@ export const Settings = ({ data, onImport, onClearAll, theme, onToggleTheme, wei
   };
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 overflow-y-auto h-full">
       <div className="space-y-2">
         <h2 className="text-xl font-semibold">Settings</h2>
         <p className="text-sm text-muted-foreground">Welcome back, {data.userName}!</p>
